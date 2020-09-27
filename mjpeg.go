@@ -164,6 +164,10 @@ func (s *Stream) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		_, err = mw.Write(b)
 		if err != nil {
 			log.Errorf("[MJPEG] Write err: %s", err);
+			
+			if flusher, ok := mw.(http.Flusher); ok {
+				flusher.Flush()
+			}
 			continue
 			//break
 		}
