@@ -13,6 +13,7 @@ import (
 	"strings"
 	"sync"
 	"time"
+	log "github.com/sirupsen/logrus"
 )
 
 // Decoder decode motion jpeg
@@ -156,11 +157,15 @@ func (s *Stream) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		h.Set("X-TimeStamp", fmt.Sprint(time.Now().Unix()))
 		mw, err := m.CreatePart(h)
 		if err != nil {
-			break
+			log.Errorf("[MJPEG] Enc err: %s", err);
+			continue
+			//break
 		}
 		_, err = mw.Write(b)
 		if err != nil {
-			break
+			log.Errorf("[MJPEG] Write err: %s", err);
+			continue
+			//break
 		}
 		if flusher, ok := mw.(http.Flusher); ok {
 			flusher.Flush()
