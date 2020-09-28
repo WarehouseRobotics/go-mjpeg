@@ -142,37 +142,39 @@ func (s *Stream) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 
 	w.Header().Set("Content-Type", "multipart/x-mixed-replace; boundary="+m.Boundary())
 	w.Header().Set("Connection", "close")
-	h := textproto.MIMEHeader{}
-	st := fmt.Sprint(time.Now().Unix())
+	header := textproto.MIMEHeader{}
+	starttime := fmt.Sprint(time.Now().Unix())
 	for {
 		time.Sleep(s.Interval)
 
-		b, ok := <-c
-		if !ok {
-			break
-		}
-		h.Set("Content-Type", "image/jpeg")
-		h.Set("Content-Length", fmt.Sprint(len(b)))
-		h.Set("X-StartTime", st)
-		h.Set("X-TimeStamp", fmt.Sprint(time.Now().Unix()))
-		mw, err := m.CreatePart(h)
-		if err != nil {
-			log.Errorf("[MJPEG] Enc err: %s", err);
+		b, errch := <-c
+		if !errch {
+			log.Errorf("[MJPEG] Channel error: %s", errch)
 			continue
-			//break
+		}
+
+		header.Set("Content-Type", "image/jpeg")
+		header.Set("Content-Length", fmt.Sprint(len(b)))
+		header.Set("X-StartTime", starttime)
+		header.Set("X-TimeStamp", fmt.Sprint(time.Now().Unix()))
+		mw, err := m.CreatePart(header)
+		if err != nil {
+			log.Errorf("[MJPEG] Enc err: %s", err)
+			continue
 		}
 		_, err = mw.Write(b)
 		if err != nil {
-			log.Errorf("[MJPEG] Write err: %s", err);
+			log.Errorf("[MJPEG] Write err: %s", err)
 			
 			if flusher, ok := mw.(http.Flusher); ok {
 				flusher.Flush()
 			}
 			continue
-			//break
 		}
 		if flusher, ok := mw.(http.Flusher); ok {
 			flusher.Flush()
 		}
 	}
+
+	log.Debug("[MJPEG] exiting stream")
 }
