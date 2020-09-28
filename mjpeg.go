@@ -146,6 +146,7 @@ func (s *Stream) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Connection", "close")
 	header := textproto.MIMEHeader{}
 	starttime := fmt.Sprint(time.Now().Unix())
+
 	for {
 		time.Sleep(s.Interval)
 
@@ -167,11 +168,11 @@ func (s *Stream) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		_, err = mw.Write(b)
 		if err != nil {
 			log.Errorf("[MJPEG] Write err: %s", err)
-			
+
 			if flusher, ok := mw.(http.Flusher); ok {
 				flusher.Flush()
 			}
-			continue
+			break // Stop and close if the writer is not available any more
 		}
 		if flusher, ok := mw.(http.Flusher); ok {
 			flusher.Flush()
