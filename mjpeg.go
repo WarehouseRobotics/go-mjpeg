@@ -80,6 +80,8 @@ func NewStreamWithInterval(interval time.Duration) *Stream {
 }
 
 func (s *Stream) Close() error {
+	log.Warn("[MJPEG] Closing stream")
+
 	s.m.Lock()
 	defer s.m.Unlock()
 	for c := range s.s {
